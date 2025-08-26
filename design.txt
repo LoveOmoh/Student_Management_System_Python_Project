@@ -1,23 +1,136 @@
-# 📊 Student Management System - Flow Diagram
+# Student Management System — Flow Diagram & Database (with Classes)
+
+## Summary of updates
+
+* Added a **Classes** table (one table that holds SS1, SS2, SS3 and their sections) and showed where class data fits in the workflow.
+* Clarified how **students** are assigned to classes and how **results** are tied to `class_id` so we can compute class-level and overall rankings.
+* Updated the flow diagram to include ***Manage Classes*** and the path for computing the **overall best student** across all classes.
+
+---
+
+## Updated Database Tables (brief schema)
+
+* **users**
+
+  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
+  * `username TEXT UNIQUE`
+  * `password TEXT`
+  * `role TEXT`  -- ('admin', 'teacher', 'student')
+
+* **classes**
+
+  * `class_id INTEGER PRIMARY KEY AUTOINCREMENT`
+  * `level TEXT`        -- 'SS1', 'SS2', 'SS3'
+  * `section TEXT`      -- 'A', 'B', ... (optional)
+  * `academic_year TEXT`
+
+* **students**
+
+  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
+  * `matric_no TEXT UNIQUE`
+  * `first_name TEXT`
+  * `last_name TEXT`
+  * `gender TEXT`
+  * `dob DATE` (optional)
+  * `class_id INTEGER`  -- FK -> classes(class\_id)
+
+* **teachers**
+
+  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
+  * `name TEXT`
+  * `username TEXT UNIQUE`
+  * `password TEXT`
+
+* **subjects**
+
+  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
+  * `name TEXT`
+  * `code TEXT`
+
+* **class\_subjects** (mapping subjects to classes)
+
+  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
+  * `class_id INTEGER`  -- FK -> classes(class\_id)
+  * `subject_id INTEGER` -- FK -> subjects(id)
+  * `teacher_id INTEGER` -- FK -> teachers(id)
+
+* **results**
+
+  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
+  * `student_id INTEGER` -- FK -> students(id)
+  * `subject_id INTEGER` -- FK -> subjects(id)
+  * `teacher_id INTEGER` -- FK -> teachers(id)
+  * `score INTEGER`
+  * `term TEXT` -- e.g., 'First', 'Second'
+  * `session TEXT` -- e.g., '2024/2025'
+  * `timestamp TEXT`
+
+* **logs** (temporary/permanent action log)
+
+  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
+  * `action TEXT`
+  * `actor TEXT`
+  * `timestamp TEXT`
+  * `details TEXT`
+
+> Note: a single normalized `classes` table is preferred over creating separate tables per class (SS1, SS2, SS3). This makes queries and ranking logic easier. If your instructor insists on separate physical tables, we can generate views or separate tables, but normalization is best practice.
+
+---
+
+## Flow Diagram (Mermaid)
 
 ```mermaid
 flowchart TD
-    A[Start] --> B[Login]
-    B -->|Admin| C[Admin Dashboard]
-    B -->|Student| D[Student Dashboard]
+    Start([Start]) --> Login[Login Page]
+    Login -->|Admin / Teacher| AdminDashboard[Admin Dashboard]
+    Login -->|Student| StudentDashboard[Student Dashboard]
 
-    C --> C1[Manage Students]
-    C --> C2[Manage Teachers]
-    C --> C3[Manage Subjects]
-    C --> C4[Enter Scores]
-    C4 --> C5[Store in Database]
-    C4 --> C6[Temporary Save in Text File]
+    subgraph ADMIN
+      AdminDashboard --> ManageClasses[Manage Classes (SS1/SS2/SS3)]
+      AdminDashboard --> ManageStudents[Manage Students]
+      AdminDashboard --> ManageTeachers[Manage Teachers]
+      AdminDashboard --> ManageSubjects[Manage Subjects]
+      AdminDashboard --> EnterScores[Enter Scores]
+      ManageClasses --> ClassesTable[(classes table)]
+      ManageStudents --> StudentsTable[(students table)]
+      ManageTeachers --> TeachersTable[(teachers table)]
+      ManageSubjects --> SubjectsTable[(subjects table)]
+      EnterScores --> TempSave[Save to temp text file (log)]
+      EnterScores --> DBSave[Save to database (results table)]
+    end
 
-    D --> D1[View Profile]
-    D --> D2[View Results]
-    D2 --> D3[Check Ranking & Best Student]
+    subgraph STUDENT
+      StudentDashboard --> ViewProfile[View Profile]
+      StudentDashboard --> ViewResults[View Results]
+    end
 
-    C5 --> E[Generate Report & Rankings]
-    D3 --> E
-    E --> F[Log Actions with Time Module]
-    F --> G[End]
+    DBSave --> ComputeRank[Compute Class & Overall Ranking]
+    ComputeRank --> BestStudent[Identify Overall Best Student]
+    BestStudent --> Reports[Generate Reports]
+    Reports --> Logs[Write action to logs table & text file (time module)]
+    TempSave --> Logs
+    DBSave --> Logs
+
+    ViewResults --> Reports
+    ViewProfile --> Logs
+
+    Reports --> End([End])
+```
+
+---
+
+## Quick notes on result & ranking logic
+
+* Results are stored per `(student_id, subject_id, term, session)`.
+* To compute class position: filter `results` by `class_id` (via students.class\_id), aggregate per student (average or total), then `ORDER BY` average DESC and assign positions.
+* To compute overall best student across SS1–SS3: aggregate all students' averages across classes and pick the highest average.
+
+---
+
+If you want, I can now:
+
+* add an **ER diagram** in the md file, or
+* generate **SQL CREATE TABLE** statements for these tables, or
+* draft the **menu-driven program skeleton** (Python) that implements authentication, class management, and result entry.
+
+Which of these should I prepare next?
