@@ -1,1 +1,23 @@
-hello
+# 📊 Student Management System - Flow Diagram
+
+```mermaid
+flowchart TD
+    A[Start] --> B[Login]
+    B -->|Admin| C[Admin Dashboard]
+    B -->|Student| D[Student Dashboard]
+
+    C --> C1[Manage Students]
+    C --> C2[Manage Teachers]
+    C --> C3[Manage Subjects]
+    C --> C4[Enter Scores]
+    C4 --> C5[Store in Database]
+    C4 --> C6[Temporary Save in Text File]
+
+    D --> D1[View Profile]
+    D --> D2[View Results]
+    D2 --> D3[Check Ranking & Best Student]
+
+    C5 --> E[Generate Report & Rankings]
+    D3 --> E
+    E --> F[Log Actions with Time Module]
+    F --> G[End]
