@@ -1,32 +1,15 @@
 # import mysql.connector as db
-# import random
-# import string
 
-# ERDB = db.connect(
+# # Connecting to MySQL
+# sms = db.connect(
 #     host="localhost",
-#     user="root",              
+#     user="root",       
 #     password="Gboyega2*",
-#     database="Employee_db",
+#     database="Student_Management_System",
 #     auth_plugin="mysql_native_password"
 # )
-# Connect = ERDB.cursor()
 
-# Creating database
-# Connect.execute("CREATE DATABASE  employee_db")
-# print("Database Created")
-
-import mysql.connector as db
-
-# Connecting to MySQL
-sms = db.connect(
-    host="localhost",
-    user="root",       
-    password="Gboyega2*",
-    database="Student_Management_System",
-    auth_plugin="mysql_native_password"
-)
-
-cursor = sms.cursor()
+# cursor = sms.cursor()
 
 # Creating Database
 # # cursor.execute("CREATE DATABASE Student_Management_System")
