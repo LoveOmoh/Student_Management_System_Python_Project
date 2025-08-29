@@ -76,7 +76,6 @@ cursor.execute("""CREATE TABLE  Score (
                 Subject_Id INT,
                 Teacher_Id INT,
                 Score INT,
-                Term ENUM('First', 'Second', 'Third'),
                 Session VARCHAR(20),
                 Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (Student_Id) REFERENCES Students(Id) ON DELETE CASCADE,
