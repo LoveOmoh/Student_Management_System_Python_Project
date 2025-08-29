@@ -1,3 +1,12 @@
+# ----------------- CLASS MANAGEMENT -----------------
+def add_class(level, section, academic_year):
+    """Add a new class"""
+    conn = connect_db()
+    cur = conn.cursor()
+    cur.execute("INSERT INTO Classes (Level, Section, Academic_Year) VALUES (%s, %s, %s)", (level, section, academic_year))
+    conn.commit()
+    print("Class added successfully!")
+    conn.close()
 import mysql.connector as db
 import hashlib
 import time   # for adding small delays in messages
@@ -64,8 +73,19 @@ def login(username, password):
 
 def add_student(matric_no, fname, lname, gender, dob, class_id):
     """Add a new student record"""
+
     conn = connect_db()
     cur = conn.cursor()
+
+    # Check if Class_Id exists
+    while True:
+        cur.execute("SELECT Class_Id FROM Classes WHERE Class_Id = %s", (class_id,))
+        result = cur.fetchone()
+        if result:
+            break
+        else:
+            print(f"Class ID {class_id} does not exist. Please enter a valid Class ID.")
+            class_id = input("Class ID: ")
 
     cur.execute("""INSERT INTO Students (Matric_No, First_Name, Last_Name, Gender, DOB, Class_Id)
                    VALUES (%s, %s, %s, %s, %s, %s)""",
@@ -218,9 +238,10 @@ def admin_menu():
         print("4. View Teachers")
         print("5. Add Subject")
         print("6. View Subjects")
-        print("7. Add Score")
-        print("8. Best Student")
-        print("9. Logout")
+        print("7. Add Class (You must add class before you can add students and teachers to that class)")
+        print("8. Add Score")
+        print("9. Best Student")
+        print("10. Logout")
 
         choice = input("Enter choice: ")
 
@@ -255,24 +276,29 @@ def admin_menu():
             view_subjects()
 
         elif choice == "7":
+            level = input("Class Level (SS1/SS2/SS3): ")
+            section = input("Section: ")
+            academic_year = input("Academic Year: ")
+            add_class(level, section, academic_year)
+
+        elif choice == "8":
             student_id = input("Student ID: ")
             subject_id = input("Subject ID: ")
             teacher_id = input("Teacher ID: ")
-            score = int(input("Score: "))
-            term = input("Term (First/Second/Third): ")
-            session = input("Session (e.g. 2024/2025): ")
-            add_score(student_id, subject_id, teacher_id, score, term, session)
-
-        elif choice == "8":
-            best_student()
+            score = input("Score: ")
+            session = input("Session: ")
+            add_score(student_id, subject_id, teacher_id, score, session)
 
         elif choice == "9":
+            best_student()
+
+        elif choice == "10":
             print("Logging out...")
             break
 
         else:
             print("Invalid choice, try again.")
-
+            add_class(level, section, academic_year)
 
 def student_menu(username):
     """Student menu (limited access)"""

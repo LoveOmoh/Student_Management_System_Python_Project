@@ -134,3 +134,18 @@ If you want, I can now:
 * draft the **menu-driven program skeleton** (Python) that implements authentication, class management, and result entry.
 
 Which of these should I prepare next?
+
+
+
+
+
+
+TO UPDATE
+-- Hashed password
+-- check why the id is starting from 2 (student table)
+-- Add middle name
+-- if matric number exist, "matric number already exist"
+-- add teachers id and class id under subject table and it should display it when the view subject is clicked on
+-- when you press logout from the admin it should take you back to the authentication Page
+-- when viewing result it should show the student name, level.
+-- for the student profile, add view subject(teachers name, subject, and teachers id, subject code)

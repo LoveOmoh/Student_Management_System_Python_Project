@@ -69,21 +69,21 @@ print("Database Created")
 #                 """)
 
 
-# # Score table
-# cursor.execute("""CREATE TABLE  Score (
-#                 Id INT AUTO_INCREMENT PRIMARY KEY,
-#                 Student_Id INT,
-#                 Subject_Id INT,
-#                 Teacher_Id INT,
-#                 Score INT,
-#                 Term ENUM('First', 'Second', 'Third'),
-#                 Session VARCHAR(20),
-#                 Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-#                 FOREIGN KEY (Student_Id) REFERENCES Students(Id) ON DELETE CASCADE,
-#                 FOREIGN KEY (Subject_Id) REFERENCES Subjects(Id) ON DELETE CASCADE,
-#                 FOREIGN KEY (Teacher_Id) REFERENCES Teachers(Id) ON DELETE CASCADE
-#                 )
-#                 """)
+# Score table
+cursor.execute("""CREATE TABLE  Score (
+                Id INT AUTO_INCREMENT PRIMARY KEY,
+                Student_Id INT,
+                Subject_Id INT,
+                Teacher_Id INT,
+                Score INT,
+                Term ENUM('First', 'Second', 'Third'),
+                Session VARCHAR(20),
+                Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (Student_Id) REFERENCES Students(Id) ON DELETE CASCADE,
+                FOREIGN KEY (Subject_Id) REFERENCES Subjects(Id) ON DELETE CASCADE,
+                FOREIGN KEY (Teacher_Id) REFERENCES Teachers(Id) ON DELETE CASCADE
+                )
+                """)
 
 # print("Database tables created successfully")
 
