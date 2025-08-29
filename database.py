@@ -15,81 +15,81 @@ cursor = sms.cursor()
 # cursor.execute("CREATE DATABASE Student_Management_System")
 print("Database Created")
 
-# Creating Tables
-# Create authentication table
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS Authentication (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Username VARCHAR(50) UNIQUE NOT NULL,
-    Password VARCHAR(100) NOT NULL,
-    Role ENUM('admin', 'student') NOT NULL
-)
-""")
+# # Creating Tables
+# # Create authentication table
+# cursor.execute("""
+# CREATE TABLE IF NOT EXISTS Authentication (
+#     Id INT AUTO_INCREMENT PRIMARY KEY,
+#     Username VARCHAR(50) UNIQUE NOT NULL,
+#     Password VARCHAR(100) NOT NULL,
+#     Role ENUM('admin', 'student') NOT NULL
+# )
+# """)
 
-# Classes Table
-cursor.execute("""CREATE TABLE  Classes (
-                Class_Id INT AUTO_INCREMENT PRIMARY KEY,
-                Level ENUM('SS1', 'SS2', 'SS3'),
-                Section VARCHAR(5),
-                Academic_Year VARCHAR(20)
-                )
-                """)
+# # Classes Table
+# cursor.execute("""CREATE TABLE  Classes (
+#                 Class_Id INT AUTO_INCREMENT PRIMARY KEY,
+#                 Level ENUM('SS1', 'SS2', 'SS3'),
+#                 Section VARCHAR(5),
+#                 Academic_Year VARCHAR(20)
+#                 )
+#                 """)
 
-# Students table
-cursor.execute("""CREATE TABLE Students (
-                Id INT AUTO_INCREMENT PRIMARY KEY,
-                Matric_No VARCHAR(20) UNIQUE,
-                First_Name VARCHAR(20),
-                Last_Name VARCHAR(20),
-                Middle_Name VARCHAR(20),
-                Gender ENUM('Male', 'Female'),
-                DOB DATE,
-                Class_Id INT,
-                FOREIGN KEY (Class_Id) REFERENCES Classes(Class_Id) ON DELETE SET NULL
-                )
-                """)
+# # Students table
+# cursor.execute("""CREATE TABLE Students (
+#                 Id INT AUTO_INCREMENT PRIMARY KEY,
+#                 Matric_No VARCHAR(20) UNIQUE,
+#                 First_Name VARCHAR(20),
+#                 Last_Name VARCHAR(20),
+#                 Middle_Name VARCHAR(20),
+#                 Gender ENUM('Male', 'Female'),
+#                 DOB DATE,
+#                 Class_Id INT,
+#                 FOREIGN KEY (Class_Id) REFERENCES Classes(Class_Id) ON DELETE SET NULL
+#                 )
+#                 """)
 
-# Teachers table
-cursor.execute("""CREATE TABLE Teachers (
-                Id INT AUTO_INCREMENT PRIMARY KEY,
-                First_Name VARCHAR(20),
-                Last_Name VARCHAR(20),
-                Middle_Name VARCHAR(20),
-                UserName VARCHAR(50) UNIQUE,
-                Password VARCHAR(10)
-                )
-                """)
+# # Teachers table
+# cursor.execute("""CREATE TABLE Teachers (
+#                 Id INT AUTO_INCREMENT PRIMARY KEY,
+#                 First_Name VARCHAR(20),
+#                 Last_Name VARCHAR(20),
+#                 Middle_Name VARCHAR(20),
+#                 UserName VARCHAR(50) UNIQUE,
+#                 Password VARCHAR(10)
+#                 )
+#                 """)
 
-# Subjects table
-cursor.execute("""CREATE TABLE Subjects (
-                Id INT AUTO_INCREMENT PRIMARY KEY,
-                Subject_Name VARCHAR(50),
-                Code VARCHAR(10)
-                )
-                """)
+# # Subjects table
+# cursor.execute("""CREATE TABLE Subjects (
+#                 Id INT AUTO_INCREMENT PRIMARY KEY,
+#                 Subject_Name VARCHAR(50),
+#                 Code VARCHAR(10)
+#                 )
+#                 """)
 
 
-# Score table
-cursor.execute("""CREATE TABLE  Score (
-                Id INT AUTO_INCREMENT PRIMARY KEY,
-                Student_Id INT,
-                Subject_Id INT,
-                Teacher_Id INT,
-                Score INT,
-                Term ENUM('First', 'Second', 'Third'),
-                Session VARCHAR(20),
-                Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (Student_Id) REFERENCES Students(Id) ON DELETE CASCADE,
-                FOREIGN KEY (Subject_Id) REFERENCES Subjects(Id) ON DELETE CASCADE,
-                FOREIGN KEY (Teacher_Id) REFERENCES Teachers(Id) ON DELETE CASCADE
-                )
-                """)
+# # Score table
+# cursor.execute("""CREATE TABLE  Score (
+#                 Id INT AUTO_INCREMENT PRIMARY KEY,
+#                 Student_Id INT,
+#                 Subject_Id INT,
+#                 Teacher_Id INT,
+#                 Score INT,
+#                 Term ENUM('First', 'Second', 'Third'),
+#                 Session VARCHAR(20),
+#                 Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#                 FOREIGN KEY (Student_Id) REFERENCES Students(Id) ON DELETE CASCADE,
+#                 FOREIGN KEY (Subject_Id) REFERENCES Subjects(Id) ON DELETE CASCADE,
+#                 FOREIGN KEY (Teacher_Id) REFERENCES Teachers(Id) ON DELETE CASCADE
+#                 )
+#                 """)
 
-print("Database tables created successfully")
+# print("Database tables created successfully")
 
-# Closing connection
-cursor.close()
-sms.close()
+# # Closing connection
+# cursor.close()
+# sms.close()
 
 
 
