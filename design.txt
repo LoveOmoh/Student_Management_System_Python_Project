@@ -141,11 +141,12 @@ Which of these should I prepare next?
 
 
 TO UPDATE
--- Hashed password
--- check why the id is starting from 2 (student table)
--- Add middle name
--- if matric number exist, "matric number already exist"
+-- Hashed password(Instead of hash password, i want it to show the exact password that the user or admin used incase they forget the password
+and come to ask for it, we can see the exact password)
+-- check why the id is starting from 2 (in student table)
+-- Add middle name(in student table and teachers table)
+-- if matric number exist, "matric number already exist"(matric number should be unique)
 -- add teachers id and class id under subject table and it should display it when the view subject is clicked on
 -- when you press logout from the admin it should take you back to the authentication Page
 -- when viewing result it should show the student name, level.
--- for the student profile, add view subject(teachers name, subject, and teachers id, subject code)
+-- for the student profile, add view subject(and the view subject should show this: teachers name, subject, and teachers id, subject code)

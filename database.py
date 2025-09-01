@@ -1,30 +1,30 @@
-import mysql.connector as db
+# import mysql.connector as db
 
-# Connecting to MySQL
-sms = db.connect(
-    host="localhost",
-    user="root",       
-    password="Gboyega2*",
-    database="Student_Management_System",
-    auth_plugin="mysql_native_password"
-)
+# # Connecting to MySQL
+# sms = db.connect(
+#     host="localhost",
+#     user="root",       
+#     password="Gboyega2*",
+#     database="Student_Management_System",
+#     auth_plugin="mysql_native_password"
+# )
 
-cursor = sms.cursor()
+# cursor = sms.cursor()
 
-# Creating Database
+# # Creating Database
 # cursor.execute("CREATE DATABASE Student_Management_System")
-print("Database Created")
+# print("Database Created")
 
-# Creating Tables
-# Create authentication table
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS Authentication (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    Username VARCHAR(50) UNIQUE NOT NULL,
-    Password VARCHAR(100) NOT NULL,
-    Role ENUM('admin', 'student') NOT NULL
-)
-""")
+# # CREATING TABLES
+# # Authentication table
+# cursor.execute("""
+# CREATE TABLE Authentication (
+#     Id INT AUTO_INCREMENT PRIMARY KEY,
+#     Username VARCHAR(50) UNIQUE NOT NULL,
+#     Password VARCHAR(100) NOT NULL,
+#     Role ENUM('admin', 'student') NOT NULL
+# )
+# """)
 
 # # Classes Table
 # cursor.execute("""CREATE TABLE  Classes (
@@ -56,7 +56,8 @@ CREATE TABLE IF NOT EXISTS Authentication (
 #                 Last_Name VARCHAR(20),
 #                 Middle_Name VARCHAR(20),
 #                 UserName VARCHAR(50) UNIQUE,
-#                 Password VARCHAR(10)
+#                 Password VARCHAR(10),
+#                 Teachers_Id INT UNIQUE
 #                 )
 #                 """)
 
@@ -64,7 +65,11 @@ CREATE TABLE IF NOT EXISTS Authentication (
 # cursor.execute("""CREATE TABLE Subjects (
 #                 Id INT AUTO_INCREMENT PRIMARY KEY,
 #                 Subject_Name VARCHAR(50),
-#                 Code VARCHAR(10)
+#                 Code VARCHAR(10),
+#                 Teachers_Id INT,          
+#                 Class_Id INT,
+#                 FOREIGN KEY (Teachers_Id) REFERENCES Teachers(Teachers_Id),
+#                 FOREIGN KEY (Class_Id) REFERENCES Classes(Class_Id)
 #                 )
 #                 """)
 
@@ -74,21 +79,21 @@ CREATE TABLE IF NOT EXISTS Authentication (
 #                 Id INT AUTO_INCREMENT PRIMARY KEY,
 #                 Student_Id INT,
 #                 Subject_Id INT,
-#                 Teacher_Id INT,
-#                 Score INT,
+#                 Teachers_Id INT,
+#                 Score INT,        
 #                 Session VARCHAR(20),
 #                 Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 #                 FOREIGN KEY (Student_Id) REFERENCES Students(Id) ON DELETE CASCADE,
 #                 FOREIGN KEY (Subject_Id) REFERENCES Subjects(Id) ON DELETE CASCADE,
-#                 FOREIGN KEY (Teacher_Id) REFERENCES Teachers(Id) ON DELETE CASCADE
+#                 FOREIGN KEY (Teachers_Id) REFERENCES Teachers(Teachers_Id) ON DELETE CASCADE
 #                 )
 #                 """)
 
 # print("Database tables created successfully")
 
-# Closing connection
-cursor.close()
-sms.close()
+# # # Closing connection
+# cursor.close()
+# sms.close()
 
 
 

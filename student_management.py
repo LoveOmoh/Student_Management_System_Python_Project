@@ -3,12 +3,13 @@ def add_class(level, section, academic_year):
     """Add a new class"""
     conn = connect_db()
     cur = conn.cursor()
-    cur.execute("INSERT INTO Classes (Level, Section, Academic_Year) VALUES (%s, %s, %s)", (level, section, academic_year))
+    cur.execute("INSERT INTO Classes (Level, Section, Academic_Year) VALUES (%s, %s, %s)", 
+                (level, section, academic_year))
     conn.commit()
     print("Class added successfully!")
     conn.close()
+
 import mysql.connector as db
-import hashlib
 import time   # for adding small delays in messages
 
 
@@ -25,13 +26,6 @@ def connect_db():
     )
 
 
-# ----------------- UTILITY -----------------
-
-def hash_password(password):
-    """Convert plain password into SHA256 hash"""
-    return hashlib.sha256(password.encode()).hexdigest()
-
-
 # ----------------- AUTHENTICATION -----------------
 
 def signup(username, password, role):
@@ -40,8 +34,9 @@ def signup(username, password, role):
     cur = conn.cursor()
 
     try:
+        # Store plain password 
         cur.execute("INSERT INTO Authentication (Username, Password, Role) VALUES (%s, %s, %s)",
-                    (username, hash_password(password), role))
+                    (username, password, role))
         conn.commit()
         print("Signup successful!")
     except db.Error as e:
@@ -58,7 +53,7 @@ def login(username, password):
     cur.execute("SELECT Password, Role FROM Authentication WHERE Username = %s", (username,))
     result = cur.fetchone()
 
-    if result and result[0] == hash_password(password):
+    if result and result[0] == password:   # compare directly
         print(f"\nLogin successful! Welcome, {username}. Role: {result[1]}")
         role = result[1]
     else:
@@ -71,11 +66,18 @@ def login(username, password):
 
 # ----------------- STUDENT MANAGEMENT -----------------
 
-def add_student(matric_no, fname, lname, gender, dob, class_id):
+def add_student(matric_no, fname, mname, lname, gender, dob, class_id):
     """Add a new student record"""
 
     conn = connect_db()
     cur = conn.cursor()
+
+    # Ensure Matric No is unique
+    cur.execute("SELECT Matric_No FROM Students WHERE Matric_No = %s", (matric_no,))
+    if cur.fetchone():
+        print("Matric number already exists!")
+        conn.close()
+        return
 
     # Check if Class_Id exists
     while True:
@@ -87,9 +89,9 @@ def add_student(matric_no, fname, lname, gender, dob, class_id):
             print(f"Class ID {class_id} does not exist. Please enter a valid Class ID.")
             class_id = input("Class ID: ")
 
-    cur.execute("""INSERT INTO Students (Matric_No, First_Name, Last_Name, Gender, DOB, Class_Id)
-                   VALUES (%s, %s, %s, %s, %s, %s)""",
-                   (matric_no, fname, lname, gender, dob, class_id))
+    cur.execute("""INSERT INTO Students (Matric_No, First_Name, Middle_Name, Last_Name, Gender, DOB, Class_Id)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                   (matric_no, fname, mname, lname, gender, dob, class_id))
     conn.commit()
     print("Student added successfully!")
 
@@ -113,14 +115,14 @@ def view_students():
 
 # ----------------- TEACHER MANAGEMENT -----------------
 
-def add_teacher(fname, lname, username, password):
+def add_teacher(fname, mname, lname, username, password, teachers_id):
     """Add new teacher"""
     conn = connect_db()
     cur = conn.cursor()
 
-    cur.execute("""INSERT INTO Teachers (First_Name, Last_Name, UserName, Password)
-                   VALUES (%s, %s, %s, %s)""",
-                   (fname, lname, username, password))
+    cur.execute("""INSERT INTO Teachers (First_Name, Middle_Name, Last_Name, UserName, Password, Teachers_Id)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
+                   (fname, mname, lname, username, password, teachers_id))
     conn.commit()
     print("Teacher added successfully!")
 
@@ -144,12 +146,13 @@ def view_teachers():
 
 # ----------------- SUBJECT MANAGEMENT -----------------
 
-def add_subject(name, code):
+def add_subject(name, code, teachers_id, class_id):
     """Add a new subject"""
     conn = connect_db()
     cur = conn.cursor()
 
-    cur.execute("INSERT INTO Subjects (Subject_Name, Code) VALUES (%s, %s)", (name, code))
+    cur.execute("""INSERT INTO Subjects (Subject_Name, Code, Teachers_Id, Class_Id) 
+                   VALUES (%s, %s, %s, %s)""", (name, code, teachers_id, class_id))
     conn.commit()
     print("Subject added successfully!")
 
@@ -161,7 +164,12 @@ def view_subjects():
     conn = connect_db()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM Subjects")
+    cur.execute("""SELECT Subjects.Id, Subjects.Subject_Name, Subjects.Code, 
+                          Teachers.Id, Teachers.First_Name, Teachers.Last_Name, 
+                          Classes.Level, Classes.Section
+                   FROM Subjects
+                   LEFT JOIN Teachers ON Subjects.Teachers_Id = Teachers.Id
+                   LEFT JOIN Classes ON Subjects.Class_Id = Classes.Class_Id""")
     subjects = cur.fetchall()
 
     print("\n--- Subjects ---")
@@ -173,14 +181,14 @@ def view_subjects():
 
 # ----------------- SCORES / RESULTS -----------------
 
-def add_score(student_id, subject_id, teacher_id, score, term, session):
+def add_score(student_id, subject_id, teachers_id, score, session):
     """Teacher enters student score"""
     conn = connect_db()
     cur = conn.cursor()
 
-    cur.execute("""INSERT INTO Score (Student_Id, Subject_Id, Teacher_Id, Score, Term, Session)
-                   VALUES (%s, %s, %s, %s, %s, %s)""",
-                   (student_id, subject_id, teacher_id, score, term, session))
+    cur.execute("""INSERT INTO Score (Student_Id, Subject_Id, Teachers_Id, Score, Session)
+                   VALUES (%s, %s, %s, %s, %s)""",
+                   (student_id, subject_id, teachers_id, score, session))
     conn.commit()
     print("Score added successfully!")
 
@@ -192,15 +200,21 @@ def view_results(student_id):
     conn = connect_db()
     cur = conn.cursor()
 
-    cur.execute("""SELECT Subjects.Subject_Name, Score.Score, Score.Term, Score.Session
+    cur.execute("""SELECT Students.First_Name, Students.Middle_Name, Students.Last_Name, Classes.Level,
+                          Subjects.Subject_Name, Score.Score, Score.Session
                    FROM Score
+                   JOIN Students ON Score.Student_Id = Students.Id
+                   JOIN Classes ON Students.Class_Id = Classes.Class_Id
                    JOIN Subjects ON Score.Subject_Id = Subjects.Id
                    WHERE Score.Student_Id = %s""", (student_id,))
     results = cur.fetchall()
 
-    print("\n--- Results ---")
-    for r in results:
-        print(r)
+    if results:
+        print(f"\nResults for {results[0][0]} {results[0][1]} {results[0][2]} | Level: {results[0][3]}")
+        for r in results:
+            print(f"Subject: {r[4]}, Score: {r[5]}, Session: {r[6]}")
+    else:
+        print("No results found.")
 
     conn.close()
 
@@ -238,7 +252,7 @@ def admin_menu():
         print("4. View Teachers")
         print("5. Add Subject")
         print("6. View Subjects")
-        print("7. Add Class (You must add class before you can add students and teachers to that class)")
+        print("7. Add Class(Adding class is mandatory before you can add students and teachers to that class)")
         print("8. Add Score")
         print("9. Best Student")
         print("10. Logout")
@@ -248,21 +262,24 @@ def admin_menu():
         if choice == "1":
             matric = input("Matric No: ")
             fname = input("First Name: ")
+            mname = input("Middle Name: ")
             lname = input("Last Name: ")
             gender = input("Gender (Male/Female): ")
             dob = input("Date of Birth (YYYY-MM-DD): ")
             class_id = input("Class ID: ")
-            add_student(matric, fname, lname, gender, dob, class_id)
+            add_student(matric, fname, mname, lname, gender, dob, class_id)
 
         elif choice == "2":
             view_students()
 
         elif choice == "3":
             fname = input("First Name: ")
+            mname = input("Middle Name: ")
             lname = input("Last Name: ")
             username = input("Username: ")
             password = input("Password: ")
-            add_teacher(fname, lname, username, password)
+            teachers_id = input("Teacher ID: ")
+            add_teacher(fname, mname, lname, username, password, teachers_id)
 
         elif choice == "4":
             view_teachers()
@@ -270,7 +287,9 @@ def admin_menu():
         elif choice == "5":
             name = input("Subject Name: ")
             code = input("Subject Code: ")
-            add_subject(name, code)
+            teachers_id = input("Teacher ID: ")
+            class_id = input("Class ID: ")
+            add_subject(name, code, teachers_id, class_id)
 
         elif choice == "6":
             view_subjects()
@@ -284,28 +303,29 @@ def admin_menu():
         elif choice == "8":
             student_id = input("Student ID: ")
             subject_id = input("Subject ID: ")
-            teacher_id = input("Teacher ID: ")
+            teachers_id = input("Teacher ID: ")
             score = input("Score: ")
             session = input("Session: ")
-            add_score(student_id, subject_id, teacher_id, score, session)
+            add_score(student_id, subject_id, teachers_id, score, session)
 
         elif choice == "9":
             best_student()
 
         elif choice == "10":
-            print("Logging out...")
-            break
+            print("Logging out....")
+            return  # go back to main menu
 
         else:
             print("Invalid choice, try again.")
-            add_class(level, section, academic_year)
+
 
 def student_menu(username):
     """Student menu (limited access)"""
     while True:
         print("\n===== STUDENT MENU =====")
         print("1. View Results")
-        print("2. Logout")
+        print("2. View Subjects")
+        print("3. Logout")
 
         choice = input("Enter choice: ")
 
@@ -314,8 +334,24 @@ def student_menu(username):
             view_results(student_id)
 
         elif choice == "2":
-            print("Logging out...")
-            break
+            conn = connect_db()
+            cur = conn.cursor()
+            cur.execute("""SELECT Subjects.Subject_Name, Subjects.Code, 
+                                  Teachers.Id, Teachers.First_Name, Teachers.Last_Name
+                           FROM Subjects
+                           JOIN Teachers ON Subjects.Teachers_Id = Teachers.Teachers.Id""")
+            subjects = cur.fetchall()
+            print("\n--- Subjects & Teachers ---")
+            if subjects:  # check if results exist
+                for s in subjects:
+                    print(f"Subject: {s[0]} ({s[1]}), Teacher: {s[3]} {s[4]}, Teacher ID: {s[2]}")
+            else:
+                print("No subjects found.")
+            conn.close()
+
+        elif choice == "3":
+            print("Logging out....")
+            return
 
         else:
             print("Invalid choice, try again.")
