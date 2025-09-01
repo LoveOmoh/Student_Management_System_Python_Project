@@ -94,13 +94,3 @@
 # # # Closing connection
 # cursor.close()
 # sms.close()
-
-
-
-
-
-
-
-
-
-
