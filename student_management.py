@@ -1,9 +1,12 @@
 import mysql.connector as db
 import time   # for adding small delays in messages
 
+
 def log_to_file(message):
     with open("log.txt", "a") as f:
         f.write(message + "\n")
+
+
 # ----------------- CLASS MANAGEMENT -----------------
 def add_class(level, section, academic_year):
     """Add a new class"""
@@ -38,10 +41,14 @@ def signup(username, password, role):
 
     try:
         # Store plain password 
-        cur.execute("INSERT INTO Authentication (Username, Password, Role) VALUES (%s, %s, %s)",
-                    (username, password, role))
-        conn.commit()
-        print("Signup successful!")
+        if len(password) > 8:
+            print("Password is too long! Must be 8 characters or fewer")
+            conn.close()
+        else:
+            cur.execute("INSERT INTO Authentication (Username, Password, Role) VALUES (%s, %s, %s)",
+                        (username, password, role))
+            conn.commit()
+            print("Signup successful!")
     except db.Error as e:
         print("Error during signup:", e)
 

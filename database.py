@@ -21,7 +21,7 @@ cursor.execute("""
 CREATE TABLE Authentication (
     Id INT AUTO_INCREMENT PRIMARY KEY,
     Username VARCHAR(50) UNIQUE NOT NULL,
-    Password VARCHAR(100) NOT NULL,
+    Password VARCHAR(8) NOT NULL,
     Role ENUM('admin', 'student') NOT NULL
 )
 """)
