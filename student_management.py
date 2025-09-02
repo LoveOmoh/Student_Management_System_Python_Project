@@ -168,13 +168,16 @@ def view_subjects():
                           Teachers.Id, Teachers.First_Name, Teachers.Last_Name, 
                           Classes.Level, Classes.Section
                    FROM Subjects
-                   LEFT JOIN Teachers ON Subjects.Teachers_Id = Teachers.Id
+                   LEFT JOIN Teachers ON Subjects.Teachers_Id = Teachers_code
                    LEFT JOIN Classes ON Subjects.Class_Id = Classes.Class_Id""")
     subjects = cur.fetchall()
 
     print("\n--- Subjects ---")
     for sub in subjects:
-        print(sub)
+        (subj_id, subj_name, code, teacher_id, teacher_fname, teacher_lname, class_level, class_section) = sub
+        teacher_info = f"{teacher_fname} {teacher_lname}" if teacher_id is not None else "No teacher assigned"
+        class_info = f"{class_level} {class_section}" if class_level is not None and class_section is not None else "No class assigned"
+        print(f"ID: {subj_id}, Name: {subj_name}, Code: {code}, Teacher: {teacher_info}, Class: {class_info}")
 
     conn.close()
 
@@ -221,21 +224,41 @@ def view_results(student_id):
 
 def best_student():
     """Find overall best student based on average score"""
+    class_level = input("Enter class level (SS1/SS2/SS3): ").strip().upper()
     conn = connect_db()
     cur = conn.cursor()
 
-    cur.execute("""SELECT Students.First_Name, Students.Last_Name, AVG(Score.Score) as AvgScore
-                   FROM Score
-                   JOIN Students ON Score.Student_Id = Students.Id
-                   GROUP BY Students.Id
-                   ORDER BY AvgScore DESC
-                   LIMIT 1""")
-    best = cur.fetchone()
+    # Get all subjects for the selected class
+    cur.execute("""
+        SELECT DISTINCT Subjects.Id, Subjects.Subject_Name
+        FROM Subjects
+        JOIN Classes ON Subjects.Class_Id = Classes.Class_Id
+        WHERE Classes.Level = %s
+    """, (class_level,))
+    subjects = cur.fetchall()
 
-    if best:
-        print(f"\nBest Student: {best[0]} {best[1]} with Average Score {best[2]:.2f}")
-    else:
-        print("No scores available yet.")
+    if not subjects:
+        print(f"No subjects found for class {class_level}.")
+        conn.close()
+        return
+
+    for subject_id, subject_name in subjects:
+        cur.execute("""
+            SELECT Students.First_Name, Students.Last_Name, MAX(Score.Score) as MaxScore
+            FROM Score
+            JOIN Students ON Score.Student_Id = Students.Id
+            WHERE Score.Subject_Id = %s AND Students.Class_Id IN (
+                SELECT Class_Id FROM Classes WHERE Level = %s
+            )
+            GROUP BY Students.Id, Score.Subject_Id
+            ORDER BY MaxScore DESC
+        """, (subject_id, class_level))
+        all_students = cur.fetchall()
+        if all_students:
+            best = all_students[0]
+            print(f"Best Student for {subject_name} in {class_level}: {best[0]} {best[1]} with Highest Score {best[2]:.2f}")
+        else:
+            print(f"No scores available for {subject_name} in {class_level}.")
 
     conn.close()
 
@@ -334,20 +357,8 @@ def student_menu(username):
             view_results(student_id)
 
         elif choice == "2":
-            conn = connect_db()
-            cur = conn.cursor()
-            cur.execute("""SELECT Subjects.Subject_Name, Subjects.Code, 
-                                  Teachers.Id, Teachers.First_Name, Teachers.Last_Name
-                           FROM Subjects
-                           JOIN Teachers ON Subjects.Teachers_Id = Teachers.Teachers.Id""")
-            subjects = cur.fetchall()
-            print("\n--- Subjects & Teachers ---")
-            if subjects:  # check if results exist
-                for s in subjects:
-                    print(f"Subject: {s[0]} ({s[1]}), Teacher: {s[3]} {s[4]}, Teacher ID: {s[2]}")
-            else:
-                print("No subjects found.")
-            conn.close()
+            view_subjects()
+            
 
         elif choice == "3":
             print("Logging out....")
