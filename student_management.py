@@ -1,3 +1,6 @@
+def log_to_file(message):
+    with open("log.txt", "a") as f:
+        f.write(message + "\n")
 # ----------------- CLASS MANAGEMENT -----------------
 def add_class(level, section, academic_year):
     """Add a new class"""
@@ -93,7 +96,9 @@ def add_student(matric_no, fname, mname, lname, gender, dob, class_id):
                    VALUES (%s, %s, %s, %s, %s, %s, %s)""",
                    (matric_no, fname, mname, lname, gender, dob, class_id))
     conn.commit()
+
     print("Student added successfully!")
+    log_to_file(f"Added student: {matric_no}, {fname} {mname} {lname}, Gender: {gender}, DOB: {dob}, Class ID: {class_id}")
 
     conn.close()
 
@@ -124,7 +129,9 @@ def add_teacher(fname, mname, lname, username, password, teachers_id):
                    VALUES (%s, %s, %s, %s, %s, %s)""",
                    (fname, mname, lname, username, password, teachers_id))
     conn.commit()
+
     print("Teacher added successfully!")
+    log_to_file(f"Added teacher: {teachers_id}, {fname} {mname} {lname}, Username: {username}")
 
     conn.close()
 
@@ -154,7 +161,9 @@ def add_subject(name, code, teachers_id, class_id):
     cur.execute("""INSERT INTO Subjects (Subject_Name, Code, Teachers_Id, Class_Id) 
                    VALUES (%s, %s, %s, %s)""", (name, code, teachers_id, class_id))
     conn.commit()
+
     print("Subject added successfully!")
+    log_to_file(f"Added subject: {name}, Code: {code}, Teacher ID: {teachers_id}, Class ID: {class_id}")
 
     conn.close()
 
@@ -193,7 +202,9 @@ def add_score(student_id, subject_id, teachers_id, score, session):
                    VALUES (%s, %s, %s, %s, %s)""",
                    (student_id, subject_id, teachers_id, score, session))
     conn.commit()
+
     print("Score added successfully!")
+    log_to_file(f"Added score: Student ID {student_id}, Subject ID {subject_id}, Teacher ID {teachers_id}, Score {score}, Session {session}")
 
     conn.close()
 

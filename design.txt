@@ -1,152 +1,100 @@
-# Student Management System — Flow Diagram & Database (with Classes)
 
-## Summary of updates
+# Student Management System — Data Flow & Database Design (Python/MySQL)
 
-* Added a **Classes** table (one table that holds SS1, SS2, SS3 and their sections) and showed where class data fits in the workflow.
-* Clarified how **students** are assigned to classes and how **results** are tied to `class_id` so we can compute class-level and overall rankings.
-* Updated the flow diagram to include ***Manage Classes*** and the path for computing the **overall best student** across all classes.
 
----
+## Database Tables (as implemented)
 
-## Updated Database Tables (brief schema)
 
-* **users**
+* **Authentication**
+  * `Id INT AUTO_INCREMENT PRIMARY KEY`
+  * `Username VARCHAR(50) UNIQUE`
+  * `Password VARCHAR(100)`  -- (stored as plain text)
+  * `Role VARCHAR(20)`  -- ('admin', 'student')
 
-  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
-  * `username TEXT UNIQUE`
-  * `password TEXT`
-  * `role TEXT`  -- ('admin', 'teacher', 'student')
 
-* **classes**
+* **Classes**
+  * `Class_Id INT AUTO_INCREMENT PRIMARY KEY`
+  * `Level VARCHAR(10)`        -- 'SS1', 'SS2', 'SS3'
+  * `Section VARCHAR(5)`      -- 'A', 'B', ...
+  * `Academic_Year VARCHAR(20)`
 
-  * `class_id INTEGER PRIMARY KEY AUTOINCREMENT`
-  * `level TEXT`        -- 'SS1', 'SS2', 'SS3'
-  * `section TEXT`      -- 'A', 'B', ... (optional)
-  * `academic_year TEXT`
 
-* **students**
+* **Students**
+  * `Id INT AUTO_INCREMENT PRIMARY KEY`
+  * `Matric_No VARCHAR(20) UNIQUE`
+  * `First_Name VARCHAR(50)`
+  * `Middle_Name VARCHAR(50)`
+  * `Last_Name VARCHAR(50)`
+  * `Gender VARCHAR(10)`
+  * `DOB DATE`
+  * `Class_Id INT`  -- FK -> Classes(Class_Id)
 
-  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
-  * `matric_no TEXT UNIQUE`
-  * `first_name TEXT`
-  * `last_name TEXT`
-  * `gender TEXT`
-  * `dob DATE` (optional)
-  * `class_id INTEGER`  -- FK -> classes(class\_id)
 
-* **teachers**
+* **Teachers**
+  * `Id INT AUTO_INCREMENT PRIMARY KEY`
+  * `First_Name VARCHAR(50)`
+  * `Middle_Name VARCHAR(50)`
+  * `Last_Name VARCHAR(50)`
+  * `UserName VARCHAR(50) UNIQUE`
+  * `Password VARCHAR(100)`
+  * `Teachers_Id INT UNIQUE`  -- (custom teacher code)
 
-  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
-  * `name TEXT`
-  * `username TEXT UNIQUE`
-  * `password TEXT`
 
-* **subjects**
+* **Subjects**
+  * `Id INT AUTO_INCREMENT PRIMARY KEY`
+  * `Subject_Name VARCHAR(50)`
+  * `Code VARCHAR(10)`
+  * `Teachers_Id INT`  -- FK -> Teachers(Teachers_Id)
+  * `Class_Id INT`     -- FK -> Classes(Class_Id)
 
-  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
-  * `name TEXT`
-  * `code TEXT`
 
-* **class\_subjects** (mapping subjects to classes)
+* **Score**
+  * `Id INT AUTO_INCREMENT PRIMARY KEY`
+  * `Student_Id INT` -- FK -> Students(Id)
+  * `Subject_Id INT` -- FK -> Subjects(Id)
+  * `Teachers_Id INT` -- FK -> Teachers(Teachers_Id)
+  * `Score INT`
+  * `Session VARCHAR(20)`
+  * `Timestamp DATETIME`
 
-  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
-  * `class_id INTEGER`  -- FK -> classes(class\_id)
-  * `subject_id INTEGER` -- FK -> subjects(id)
-  * `teacher_id INTEGER` -- FK -> teachers(id)
 
-* **results**
+# Data Flow Overview
 
-  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
-  * `student_id INTEGER` -- FK -> students(id)
-  * `subject_id INTEGER` -- FK -> subjects(id)
-  * `teacher_id INTEGER` -- FK -> teachers(id)
-  * `score INTEGER`
-  * `term TEXT` -- e.g., 'First', 'Second'
-  * `session TEXT` -- e.g., '2024/2025'
-  * `timestamp TEXT`
-
-* **logs** (temporary/permanent action log)
-
-  * `id INTEGER PRIMARY KEY AUTOINCREMENT`
-  * `action TEXT`
-  * `actor TEXT`
-  * `timestamp TEXT`
-  * `details TEXT`
+1. **Authentication**: User logs in (admin/student). Credentials checked in Authentication table.
+2. **Admin Menu**: Admin can add/view students, teachers, classes, subjects, enter scores, and view best students.
+3. **Student Menu**: Student can view their results and subjects.
+4. **Class Management**: Classes are created with level, section, and academic year.
+5. **Student Management**: Students are added with unique matric number and assigned to a class.
+6. **Teacher Management**: Teachers are added with unique Teachers_Id and can be assigned to subjects.
+7. **Subject Management**: Subjects are created and linked to both a class and a teacher (via Teachers_Id and Class_Id).
+8. **Score Entry**: Scores are entered for students per subject, teacher, and session.
+9. **Best Student Calculation**: For a selected class level, the system finds the student with the highest score per subject across all sections (A/B) of that level.
+10. **Result Viewing**: Students and admins can view results, which show student name, level, subject, score, and session.
 
 > Note: a single normalized `classes` table is preferred over creating separate tables per class (SS1, SS2, SS3). This makes queries and ranking logic easier. If your instructor insists on separate physical tables, we can generate views or separate tables, but normalization is best practice.
 
 ---
 
-## Flow Diagram (Mermaid)
 
-```mermaid
-flowchart TD
-    Start([Start]) --> Login[Login Page]
-    Login -->|Admin / Teacher| AdminDashboard[Admin Dashboard]
-    Login -->|Student| StudentDashboard[Student Dashboard]
+## Data Flow (Summary)
 
-    subgraph ADMIN
-      AdminDashboard --> ManageClasses[Manage Classes (SS1/SS2/SS3)]
-      AdminDashboard --> ManageStudents[Manage Students]
-      AdminDashboard --> ManageTeachers[Manage Teachers]
-      AdminDashboard --> ManageSubjects[Manage Subjects]
-      AdminDashboard --> EnterScores[Enter Scores]
-      ManageClasses --> ClassesTable[(classes table)]
-      ManageStudents --> StudentsTable[(students table)]
-      ManageTeachers --> TeachersTable[(teachers table)]
-      ManageSubjects --> SubjectsTable[(subjects table)]
-      EnterScores --> TempSave[Save to temp text file (log)]
-      EnterScores --> DBSave[Save to database (results table)]
-    end
-
-    subgraph STUDENT
-      StudentDashboard --> ViewProfile[View Profile]
-      StudentDashboard --> ViewResults[View Results]
-    end
-
-    DBSave --> ComputeRank[Compute Class & Overall Ranking]
-    ComputeRank --> BestStudent[Identify Overall Best Student]
-    BestStudent --> Reports[Generate Reports]
-    Reports --> Logs[Write action to logs table & text file (time module)]
-    TempSave --> Logs
-    DBSave --> Logs
-
-    ViewResults --> Reports
-    ViewProfile --> Logs
-
-    Reports --> End([End])
-```
+1. **Start** → **Login** (Authentication)
+2. **Admin**: Can manage classes, students, teachers, subjects, enter scores, and view best students.
+  - Adding/Viewing classes, students, teachers, and subjects updates the respective tables.
+  - Entering scores updates the Score table.
+  - Viewing best students queries Score, Students, Subjects, and Classes tables.
+3. **Student**: Can view their results and subjects (with teacher info).
+4. **All data is linked by foreign keys (Class_Id, Teachers_Id, Subject_Id, Student_Id) to ensure correct relationships and queries.**
 
 ---
 
-## Quick notes on result & ranking logic
 
-* Results are stored per `(student_id, subject_id, term, session)`.
-* To compute class position: filter `results` by `class_id` (via students.class\_id), aggregate per student (average or total), then `ORDER BY` average DESC and assign positions.
-* To compute overall best student across SS1–SS3: aggregate all students' averages across classes and pick the highest average.
+## Notes on Result & Ranking Logic
 
----
-
-If you want, I can now:
-
-* add an **ER diagram** in the md file, or
-* generate **SQL CREATE TABLE** statements for these tables, or
-* draft the **menu-driven program skeleton** (Python) that implements authentication, class management, and result entry.
-
-Which of these should I prepare next?
+* Scores are stored per (student, subject, session).
+* All relationships are managed by foreign keys for data integrity.
 
 
 
 
 
-
-TO UPDATE
--- Hashed password(Instead of hash password, i want it to show the exact password that the user or admin used incase they forget the password
-and come to ask for it, we can see the exact password)
--- check why the id is starting from 2 (in student table)
--- Add middle name(in student table and teachers table)
--- if matric number exist, "matric number already exist"(matric number should be unique)
--- add teachers id and class id under subject table and it should display it when the view subject is clicked on
--- when you press logout from the admin it should take you back to the authentication Page
--- when viewing result it should show the student name, level.
--- for the student profile, add view subject(and the view subject should show this: teachers name, subject, and teachers id, subject code)
