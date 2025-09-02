@@ -241,7 +241,7 @@ def view_results(student_id):
 
 
 def best_student():
-    """Find overall best student based on average score"""
+    """Find overall best student based on high score"""
     class_level = input("Enter class level (SS1/SS2/SS3): ").strip().upper()
     conn = connect_db()
     cur = conn.cursor()
@@ -384,7 +384,6 @@ def student_menu(username):
 
         else:
             print("Invalid choice, try again.")
-
 
 def main():
     """Main entry point"""

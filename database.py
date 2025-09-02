@@ -94,3 +94,5 @@ print("Database tables created successfully")
 # # Closing connection
 cursor.close()
 sms.close()
+
+
