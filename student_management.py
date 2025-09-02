@@ -1,3 +1,6 @@
+import mysql.connector as db
+import time   # for adding small delays in messages
+
 def log_to_file(message):
     with open("log.txt", "a") as f:
         f.write(message + "\n")
@@ -11,9 +14,6 @@ def add_class(level, section, academic_year):
     conn.commit()
     print("Class added successfully!")
     conn.close()
-
-import mysql.connector as db
-import time   # for adding small delays in messages
 
 
 # ----------------- DATABASE CONNECTION -----------------
